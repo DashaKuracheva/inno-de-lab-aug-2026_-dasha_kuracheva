@@ -35,20 +35,19 @@ WHERE enddate IS NULL;
 --transaction insert
 BEGIN;
 
-INSERT INTO employees (firstname, lastname, department, salary, email)
-VALUES ('Kris', 'Morgan', 'IT', 70000.00, 'kris.morgan5@gmail.com')
-RETURNING employeeid;
-
+WITH new_employee AS (
+    INSERT INTO employees (firstname, lastname, department, salary, email)
+    VALUES ('Jon', 'Ork', 'HR', 85000.00, 'jon.ork86@gmail.com')
+    RETURNING employeeid
+)
 INSERT INTO employeeprojects (projectid, employeeid, hoursworked)
-VALUES (
-	(
-		SELECT projectid
-		FROM projects 
-		WHERE projectname = 'Website Redesign'
-	),
-    9, -- id from RETURNING
+SELECT 
+    p.projectid,
+    e.employeeid,
     80
-);
+FROM new_employee e
+CROSS JOIN projects p
+WHERE p.projectname = 'Website Redesign';
 
 COMMIT;
 
