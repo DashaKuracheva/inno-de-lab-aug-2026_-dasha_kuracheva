@@ -11,8 +11,8 @@ db_config = {
 # If there is no connection key, an empty dictionary is returned
 connection = db_config.get("connection", {})
 
-host = connection.get("host")
-port = connection.get("port")
+host = connection.get("host", "localhost")
+port = connection.get("port", 5432)
 
 # Check for the presence of ssl_settings and the nested ssl_mode
 ssl = db_config.get("ssl_settings", {})
