@@ -46,7 +46,7 @@
 `venue_sk, venue_id, name, capacity, country, city`
 
 ### 5. `dim_seat` (Место/категория билета?)
-`seat_sk, seat_type, seat_code, price`
+`seat_sk, seat_type`
 
 ### 6.`dim_order` (Контекст заказа?)
 `order_sk, way_to_pay, sales_channel`
@@ -63,10 +63,9 @@
 > `sale_date_key` и `event_date_key` — оба ссылаются на `dim_date`, но на разные записи справочника дат; `seat_key` ссылается на `dim_seat` (категория/место билета); `order_context_key` ссылается на `dim_order` (способ оплаты и канал продаж).
 
 **Вырожденные измерения (Degenerate Dimensions):**
-`order_id, ticket_id` — идентификаторы из источника, хранятся прямо в факте без отдельной таблицы измерения.
+`order_id, ticket_id, seat_code` — идентификаторы из источника, хранятся прямо в факте без отдельной таблицы измерения.
 
 **Метрики:**
-- `quantity` — количество билетов;
 - `value_amount` — номинальная стоимость билета;
 - `service_fee_amount` — сервисный сбор платформы;
 - `discount_amount` — скидка по промокоду;
