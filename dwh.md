@@ -77,7 +77,7 @@
 
 **Звезда (star schema)** с одним ролевым измерением (`dim_date`, переиспользуется дважды).
 
-![star schema](./screens/schema_star.png)
+![star schema](./screens/schema_star. png)
 ---
 
 
