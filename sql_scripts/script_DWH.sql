@@ -48,9 +48,7 @@ CREATE TABLE dim_event (
 
 CREATE TABLE dim_seat (
     seat_sk INTEGER PRIMARY KEY,
-    seat_type VARCHAR(50),
-    seat_code VARCHAR(20),
-    price DECIMAL(10,2)
+    seat_type VARCHAR(50) NOT NULL,
 );
 
 CREATE TABLE dim_order (
@@ -84,9 +82,9 @@ CREATE TABLE fact_ticket_sales (
 --уникальные идентификаторы из транзакционной системы
     order_id UUID NOT NULL,
     ticket_id UUID NOT NULL,
+	seat_code VARCHAR(20),
     
 --метрики    
-    quantity INTEGER NOT NULL, -- кол-во билетов в данной позиции(default 1)
     value_amount DECIMAL(10,2),  -- стоимость ОДНОГО билета
     service_fee_amount DECIMAL(10,2), --сервисный сбор 
     discount_amount DECIMAL(10,2), --скидка
@@ -126,14 +124,14 @@ INSERT INTO dim_event (event_sk, event_id, name, category, genre, start_time)
 	(50, 'EV-05', 'Modern Art Expo', 'Exhibition', 'Contemporary', '10:00:00'),
 	(60, 'EV-06', 'Symphony Orchestra Show', 'Concert', 'Classical', '19:30:00');
 
-INSERT INTO dim_seat (seat_sk, seat_type, seat_code, price) 
+INSERT INTO dim_seat (seat_sk, seat_type) 
 	VALUES
-	(100, 'VIP', 'A-01', 15000.00),
-	(200, 'Standard', 'B-15', 3000.00),
-	(300, 'Fan Zone', 'F-100', 1500.00),
-	(400, 'Parterre', 'P-05', 7500.00),
-	(500, 'Balcony', 'C-12', 2000.00),
-	(600, 'Student', 'S-01', 800.00);
+	(100, 'VIP'),
+	(200, 'Standard'),
+	(300, 'Fan Zone'),
+	(400, 'Parterre'),
+	(500, 'Balcony'),
+	(600, 'Student');
 
 INSERT INTO dim_order (order_sk, way_to_pay, sales_channel) 
 	VALUES
@@ -154,8 +152,8 @@ INSERT INTO dim_venue (venue_sk, venue_id, name, capacity, country, city)
 	(6000, 'VEN-06', 'Philharmonie Berlin', 2400, 'Germany', 'Berlin');
 
 INSERT INTO fact_ticket_sales (
-    sale_date_key, event_date_key, customer_key, event_key, seat_key, 
-    venue_key, order_context_key, order_id, ticket_id, quantity, 
+    sale_date_key, event_date_key, customer_key, event_key, seat_key,
+    venue_key, order_context_key, order_id, ticket_id, seat_code,
     value_amount, service_fee_amount, discount_amount, total_amount
 ) VALUES
 -- Продажа: Рок-фестиваль в Лондоне
@@ -164,13 +162,13 @@ INSERT INTO fact_ticket_sales (
     20260825, -- дата проведения мероприятия (YYYYMMDD)
     2, -- ID покупателя
     10, -- ID мероприятия
-    100, -- ID категории мест
+    100, -- ID категории мест (VIP)
     2000, -- ID площадки
     1, -- ID канала продаж
     'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', -- уникальный идентификатор заказа
     'c1b12345-8888-4ef8-bb6d-6bb9bd380a11', -- уникальный идентификатор билета
-    1, -- количество купленных билетов
-    30000.00, -- базовая стоимость билетов
+    'A-01', -- конкретное место на площадке Wembley Stadium
+    30000.00, -- базовая стоимость билета
     1500.00, -- сумма сервисного сбора
     0.00, -- сумма скидки
     31500.00  -- итоговая сумма
@@ -181,13 +179,13 @@ INSERT INTO fact_ticket_sales (
     20260910, -- дата проведения мероприятия (YYYYMMDD)
     1, -- ID покупателя
     30, -- ID мероприятия
-    200, -- ID категории мест
+    200, -- ID категории мест (Standard)
     1000, -- ID площадки
     2, -- ID канала продаж
     'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b22', -- уникальный идентификатор заказа
     'd2b12345-9999-4ef8-bb6d-6bb9bd380b22', -- уникальный идентификатор билета
-    1, -- количество купленных билетов
-    9000.00, -- базовая стоимость билетов
+    'B-15', -- конкретное место на площадке Лужники
+    9000.00, -- базовая стоимость билета
     450.00, -- сумма сервисного сбора
     1000.00, -- сумма скидки
     8450.00  -- итоговая сумма
@@ -198,13 +196,13 @@ INSERT INTO fact_ticket_sales (
     20260825, -- дата проведения мероприятия (YYYYMMDD)
     4, -- ID покупателя
     20, -- ID мероприятия
-    400, -- ID категории мест
+    400, -- ID категории мест (Parterre)
     3000, -- ID площадки
     3, -- ID канала продаж
     'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', -- уникальный идентификатор заказа
     'e3b12345-0000-4ef8-bb6d-6bb9bd380c33', -- уникальный идентификатор билета
-    1, -- количество купленных билетов
-    15000.00, -- базовая стоимость билетов
+    'P-05', -- конкретное место в Большом Театре
+    15000.00, -- базовая стоимость билета
     0.00, -- сумма сервисного сбора
     1000.00,  -- сумма скидки
     14000.00  -- итоговая сумма
@@ -215,13 +213,13 @@ INSERT INTO fact_ticket_sales (
     20260825, -- дата проведения мероприятия (YYYYMMDD)
     3, -- ID покупателя
     10, -- ID мероприятия
-    300, -- ID категории мест
+    300, -- ID категории мест (Fan Zone)
     2000, -- ID площадки
     1, -- ID канала продаж
     'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', -- уникальный идентификатор заказа
     'f4b12345-1111-4ef8-bb6d-6bb9bd380d44', -- уникальный идентификатор билета
-    1, -- количество купленных билетов
-    6000.00,  -- базовая стоимость билетов
+    'F-100', -- конкретное место на Wembley Stadium
+    6000.00,  -- базовая стоимость билета
     300.00, -- сумма сервисного сбора
     0.00, -- сумма скидки
     6300.00  -- итоговая сумма
@@ -232,13 +230,13 @@ INSERT INTO fact_ticket_sales (
     20260820, -- дата проведения мероприятия (YYYYMMDD)
     5, -- ID покупателя
     40, -- ID мероприятия
-    200, -- ID категории мест
+    200, -- ID категории мест (Standard)
     4000, -- ID площадки
     5, -- ID канала продаж
     'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380e55', -- уникальный идентификатор заказа
     'a1b12345-2222-4ef8-bb6d-6bb9bd380e55', -- уникальный идентификатор билета
-    1, -- количество купленных билетов
-    3000.00, -- базовая стоимость билетов
+    'B-22', -- конкретное место в МСК Арене
+    3000.00, -- базовая стоимость билета
     150.00, -- сумма сервисного сбора
     300.00, -- сумма скидки
     2850.00  -- итоговая сумма
@@ -249,13 +247,13 @@ INSERT INTO fact_ticket_sales (
     20261005, -- дата проведения мероприятия (YYYYMMDD)
     6, -- ID покупателя
     50, -- ID мероприятия
-    600,  -- ID категории мест
+    600,  -- ID категории мест (Student)
     5000, -- ID площадки
     4,  -- ID канала продаж
     'f5eebc99-9c0b-4ef8-bb6d-6bb9bd380f66', -- уникальный идентификатор заказа
     'b2b12345-3333-4ef8-bb6d-6bb9bd380f66', -- уникальный идентификатор билета
-    1, -- количество купленных билетов
-    1600.00, -- базовая стоимость билетов
+    'S-01', -- конкретное место в Madison Square Garden
+    1600.00, -- базовая стоимость билета
     80.00,  -- сумма сервисного сбора
     0.00, -- сумма скидки
     1680.00 -- итоговая сумма
@@ -266,13 +264,13 @@ INSERT INTO fact_ticket_sales (
     20261015, -- дата проведения мероприятия (YYYYMMDD)
     8, -- ID покупателя
     60, -- ID мероприятия
-    100, -- ID категории мест
+    100, -- ID категории мест (VIP)
     6000, -- ID площадки
     1, -- ID канала продаж
     'a6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77', -- уникальный идентификатор заказа
     'c3b12345-4444-4ef8-bb6d-6bb9bd380a77', -- уникальный идентификатор билета
-    1, -- количество купленных билетов
-    15000.00, -- базовая стоимость билетов
+    'A-05', -- конкретное место в Philharmonie Berlin
+    15000.00, -- базовая стоимость билета
     750.00, -- сумма сервисного сбора
     2000.00, -- сумма скидки
     13750.00  -- итоговая сумма
@@ -283,13 +281,15 @@ INSERT INTO fact_ticket_sales (
     20260825, -- дата проведения мероприятия (YYYYMMDD)
     7, -- ID покупателя
     20, -- ID мероприятия
-    100, -- ID категории мест
+    100, -- ID категории мест (VIP)
     3000, -- ID площадки
     2, -- ID канала продаж
     'b7eebc99-9c0b-4ef8-bb6d-6bb9bd380b88', -- уникальный идентификатор заказа
     'd4b12345-5555-4ef8-bb6d-6bb9bd380b88', -- уникальный идентификатор билета
-    1, -- количество купленных билетов
-    30000.00, -- базовая стоимость билетов
+    'A-01', -- конкретное место в Большом Театре (другая площадка, поэтому
+            -- дубль кода "A-01" из первой продажи корректен — он теперь
+            -- живёт в контексте venue через fact, а не как общий seat_sk)
+    30000.00, -- базовая стоимость билета
     1500.00, -- сумма сервисного сбора
     0.00, -- сумма скидки
     31500.00  -- итоговая сумма
@@ -327,14 +327,18 @@ GROUP BY o.sales_channel,
 ORDER BY total_revenue DESC;
 
 --Какова доля выручки от продаж различных категорий мест (VIP, Standard) и какова скидка на них?
-SELECT 
+SELECT
     s.seat_type,
-    COUNT(f.ticket_id) AS tickets_sold, 
+    COUNT(f.ticket_id) AS tickets_sold,
     SUM(f.value_amount) AS base_revenue,
     SUM(f.discount_amount) AS total_discounts_given,
-    SUM(f.total_amount) AS final_revenue
+    SUM(f.total_amount) AS final_revenue,
+    ROUND(
+        100.0 * SUM(f.total_amount) / SUM(SUM(f.total_amount)) OVER (),
+        2
+    ) AS revenue_share_pct
 FROM fact_ticket_sales f
-JOIN dim_seat s 
+JOIN dim_seat s
 	ON f.seat_key = s.seat_sk
 GROUP BY s.seat_type
 ORDER BY final_revenue DESC;
